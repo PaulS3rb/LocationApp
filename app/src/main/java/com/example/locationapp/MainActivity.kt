@@ -5,24 +5,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.locationapp.auth.AuthScreen
+import com.example.locationapp.auth.AuthViewModel
+import com.example.locationapp.home.HomeScreen
 import com.example.locationapp.ui.theme.LocationAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,64 +24,45 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LocationAppTheme {
-                LocationAppApp()
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    LocationAppNavigation()
+                }
             }
         }
     }
 }
 
-@PreviewScreenSizes
 @Composable
-fun LocationAppApp() {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+fun LocationAppNavigation() {
+    val navController = rememberNavController()
 
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
-            AppDestinations.entries.forEach {
-                item(
-                    icon = {
-                        Icon(
-                            it.icon,
-                            contentDescription = it.label
-                        )
-                    },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
-                )
-            }
-        }
+    NavHost(
+        navController = navController,
+        startDestination = "auth"
     ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Greeting(
-                name = "Android",
-                modifier = Modifier.padding(innerPadding)
+        composable("auth") {
+            val viewModel: AuthViewModel = viewModel()
+            AuthScreen(
+                viewModel = viewModel,
+                onAuthSuccess = {
+                    navController.navigate("home") {
+                        popUpTo("auth") { inclusive = true }
+                    }
+                }
             )
         }
-    }
-}
 
-enum class AppDestinations(
-    val label: String,
-    val icon: ImageVector,
-) {
-    HOME("Home", Icons.Default.Home),
-    FAVORITES("Favorites", Icons.Default.Favorite),
-    PROFILE("Profile", Icons.Default.AccountBox),
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    LocationAppTheme {
-        Greeting("Android")
+        composable("home") {
+            HomeScreen(
+                onLogout = {
+                    navController.navigate("auth") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            )
+        }
     }
 }
