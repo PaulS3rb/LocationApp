@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -261,11 +262,13 @@ fun ProfilePage() {
 }
 
 @Composable
-fun StatCard(label: String, value: String) {
+fun RowScope.StatCard(label: String, value: String) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2)),
         elevation = CardDefaults.cardElevation(2.dp),
-
+        modifier = Modifier
+            .weight(1f)
+            .heightIn(min = 100.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
