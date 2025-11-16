@@ -232,17 +232,17 @@ fun FriendCard(friend: Friend, index: Int, sortBy: String) {
         ) {
 
             // Rank badge when sorting by points
-            if (sortBy == "points") {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("#${index + 1}", color = Color.White)
-                }
-            }
+//            if (sortBy == "points") {
+//                Box(
+//                    modifier = Modifier
+//                        .size(40.dp)
+//                        .clip(CircleShape)
+//                        .background(Color.Black),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text("#${index + 1}", color = Color.White)
+//                }
+//            }
 
             // Avatar
             AsyncImage(
