@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -42,6 +43,9 @@ android {
 }
 
 dependencies {
+
+    val room_version = "2.8.3"
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -67,4 +71,10 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.coil.compose)
     implementation(libs.androidx.compose.material.icons.extended)
+
+    implementation(libs.androidx.room.runtime.v283)
+    ksp(libs.androidx.room.compiler.v283)
+    implementation(libs.androidx.room.ktx.v283)
+    implementation(libs.androidx.room.rxjava2)
+    implementation(libs.androidx.room.paging)
 }
