@@ -40,6 +40,8 @@ import com.example.locationapp.viewmodel.AuthViewModelFactory
 
 
 class MainActivity : ComponentActivity() {
+
+
     private lateinit var db: AppDatabase
 
     // Use the factory to provide the UserDao to the AuthViewModel
