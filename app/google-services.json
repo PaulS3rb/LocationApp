@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "708152984810",
+    "firebase_url": "https://location-tracker-a4a7f-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "location-tracker-a4a7f",
+    "storage_bucket": "location-tracker-a4a7f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:708152984810:android:1aa59f72fc8dd27c878393",
+        "android_client_info": {
+          "package_name": "com.example.locationapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "708152984810-dqbge10v3m6ejo1ji1nd5gveapkeqi3j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.locationapp",
+            "certificate_hash": "c1ed8ab16d4b50a932e2cb818537b89e3d005b58"
+          }
+        },
+        {
+          "client_id": "708152984810-rl7vo1r0i98jv7ovm0gm2sppeokbcv3h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLBOLK_XvRRFDqV5TBuorBa5IixiOHo84"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "708152984810-rl7vo1r0i98jv7ovm0gm2sppeokbcv3h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

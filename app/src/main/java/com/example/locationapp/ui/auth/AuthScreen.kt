@@ -25,6 +25,7 @@ import com.example.locationapp.ui.theme.*
 import com.example.locationapp.viewmodel.AuthState
 import com.example.locationapp.viewmodel.AuthViewModel
 
+
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel,

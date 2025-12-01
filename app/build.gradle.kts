@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -10,6 +11,7 @@ android {
     compileSdk {
         version = release(36)
     }
+
 
     defaultConfig {
         applicationId = "com.example.locationapp"
@@ -77,4 +79,12 @@ dependencies {
     implementation(libs.androidx.room.ktx.v283)
     implementation(libs.androidx.room.rxjava2)
     implementation(libs.androidx.room.paging)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.analytics)
+
+
 }
+
