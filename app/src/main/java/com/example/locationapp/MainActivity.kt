@@ -28,35 +28,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import androidx.room.Room
-import com.example.locationapp.database.AppDatabase
+import com.example.locationapp.repository.AuthRepository
 import com.example.locationapp.ui.Pages.FriendsPage
 import com.example.locationapp.ui.Pages.ProfilePage
 import com.example.locationapp.ui.auth.AuthScreen
 import com.example.locationapp.ui.theme.BackgroundColor
-import com.example.locationapp.ui.theme.LocationAppTheme
 import com.example.locationapp.viewmodel.AuthViewModel
 import com.example.locationapp.viewmodel.AuthViewModelFactory
 
 
 class MainActivity : ComponentActivity() {
-
-
-    private lateinit var db: AppDatabase
-
-    // Use the factory to provide the UserDao to the AuthViewModel
     private val authViewModel: AuthViewModel by viewModels {
-        AuthViewModelFactory(db.userDao())
+        AuthViewModelFactory(AuthRepository())
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        db = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java, "location-app-db"
-        ).build()
-
         enableEdgeToEdge()
         setContent {
             var isAuthenticated by rememberSaveable { mutableStateOf(false) }

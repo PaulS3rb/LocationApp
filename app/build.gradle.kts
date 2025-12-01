@@ -12,6 +12,7 @@ android {
         version = release(36)
     }
 
+
     defaultConfig {
         applicationId = "com.example.locationapp"
         minSdk = 24
@@ -79,9 +80,11 @@ dependencies {
     implementation(libs.androidx.room.rxjava2)
     implementation(libs.androidx.room.paging)
 
-    implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
-    implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-auth-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.analytics)
+
 
 }
+
