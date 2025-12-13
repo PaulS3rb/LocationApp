@@ -43,6 +43,8 @@ import androidx.compose.ui.res.painterResource
 @Composable
 fun ProfilePage(viewModel: ProfileViewModel) {
     val userData by viewModel.user.collectAsState()
+    val topLocations by viewModel.topLocations.collectAsState() // Collect the global top locations
+
     if (userData == null) {
         // You can show a loading indicator here
         return
@@ -121,10 +123,10 @@ fun ProfilePage(viewModel: ProfileViewModel) {
             Text("Top 3 Locations", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (userData!!.topLocations.isEmpty()) {
-                Text("No locations visited yet.", color = Color(0xFFB6B09F), modifier = Modifier.padding(vertical = 8.dp))
+            if (topLocations.isEmpty()) {
+                Text("No locations visited yet by anyone.", color = Color(0xFFB6B09F), modifier = Modifier.padding(vertical = 8.dp))
             } else {
-                userData!!.topLocations.forEachIndexed { index, location ->
+                topLocations.forEachIndexed { index, location ->
                     Card(
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2)),
                         modifier = Modifier
@@ -150,7 +152,7 @@ fun ProfilePage(viewModel: ProfileViewModel) {
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     Text(location.city, color = Color.Black, fontWeight = FontWeight.Medium)
-                                    Text(location.country, color = Color(0xFFB6B09F), fontSize = 12.sp)
+                                    Text("${location.totalVisits} visits", color = Color(0xFFB6B09F), fontSize = 12.sp)
                                 }
                             }
                             Column(horizontalAlignment = Alignment.End) {
@@ -159,18 +161,12 @@ fun ProfilePage(viewModel: ProfileViewModel) {
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
                                     Text(
-                                        "${location.points} pts",
+                                        "${location.totalPointsAwarded} pts", // Display total points
                                         color = Color.White,
                                         fontSize = 12.sp,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                     )
                                 }
-                                Text(
-                                    "${location.distance} km",
-                                    color = Color(0xFFB6B09F),
-                                    fontSize = 12.sp,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
                             }
                         }
                     }
@@ -190,7 +186,7 @@ fun ProfilePage(viewModel: ProfileViewModel) {
         }
     }
 }
-
+// StatCard composable remains the same
 @Composable
 fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
     Card(

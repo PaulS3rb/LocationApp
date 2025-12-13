@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.locationapp.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
+
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -34,6 +35,7 @@ class AuthViewModel(private val repo: AuthRepository) : ViewModel() {
 
             _authState.value = AuthState.Loading
 
+            // This call will now succeed because the function exists in the repository
             val result = repo.signup(userName, email, password)
 
             result.onSuccess {
@@ -49,6 +51,7 @@ class AuthViewModel(private val repo: AuthRepository) : ViewModel() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
 
+            // This call will also succeed now
             val result = repo.login(email, password)
 
             result.onSuccess {
@@ -58,6 +61,12 @@ class AuthViewModel(private val repo: AuthRepository) : ViewModel() {
                 _authState.value = AuthState.Error(it.message ?: "Invalid email or password.")
             }
         }
+    }
+
+    // --- NEW LOGOUT FUNCTION ---
+    fun logout() {
+        repo.logout()
+        _isAuthenticated.value = false
     }
 
     fun resetAuthState() {
@@ -74,4 +83,3 @@ class AuthViewModelFactory(private val repo: AuthRepository) : ViewModelProvider
         throw IllegalArgumentException("Unknown ViewModel")
     }
 }
-

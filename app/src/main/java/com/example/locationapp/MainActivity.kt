@@ -82,7 +82,9 @@ class MainActivity : ComponentActivity() {
         AuthViewModelFactory(AuthRepository(applicationContext))
     }
     private val profileViewModel: ProfileViewModel by viewModels{
-        ProfileViewModelFactory(AuthRepository(applicationContext))
+        ProfileViewModelFactory(
+            AuthRepository(applicationContext),
+            LocationRepository())
     }
     private val homeViewModel: HomeViewModel by viewModels {
         HomeViewModelFactory(

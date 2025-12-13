@@ -1,27 +1,31 @@
 package com.example.locationapp.repository
 
-import com.google.firebase.auth.FirebaseAuth
+import com.example.locationapp.model.Location
 import com.google.firebase.firestore.FirebaseFirestore
-
-// Represents a user's check-in at a location
-data class LocationVisit(
-    val city: String,    val points: Int,
-    val timestamp: String // For simplicity, using String. Use com.google.firebase.Timestamp in a real app.
-)
+import com.google.firebase.firestore.Query
+import kotlinx.coroutines.tasks.await
 
 class LocationRepository {
 
-    private val auth = FirebaseAuth.getInstance()
-    private val users = FirebaseFirestore.getInstance().collection("users")
+    private val locationsCollection = FirebaseFirestore.getInstance().collection("locations")
 
-        suspend fun getRecentVisits(): Result<List<LocationVisit>> {
+    /**
+     * Fetches the top locations from the global 'locations' collection,
+     * sorted by the total points awarded in descending order.
+     *
+     * @param limit The maximum number of top locations to retrieve.
+     * @return A Result containing the list of top Location objects or an exception.
+     */
+    suspend fun getTopLocations(limit: Int = 10): Result<List<Location>> {
         return try {
-            val mockVisits = listOf(
-                LocationVisit("Bucharest", 250, "2 days ago"),
-                LocationVisit("Brașov", 120, "1 week ago"),
-                LocationVisit("Sibiu", 100, "2 weeks ago")
-            )
-            Result.success(mockVisits)
+            val snapshot = locationsCollection
+                .orderBy("totalPointsAwarded", Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
+                .await()
+
+            val topLocations = snapshot.toObjects(Location::class.java)
+            Result.success(topLocations)
         } catch (e: Exception) {
             Result.failure(e)
         }

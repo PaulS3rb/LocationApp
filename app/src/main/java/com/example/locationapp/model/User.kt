@@ -6,7 +6,6 @@ data class User(
     val email: String = "",
     val points: Float = 0f,
     val profileImage: String = "",
-    val topLocations: List<Location> = emptyList(),
     val citiesVisited: Int = 0,
     val countriesVisited: Int = 0,
     val currentLatitude: Double = 0.0,
