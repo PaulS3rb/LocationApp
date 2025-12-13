@@ -25,7 +25,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,32 +36,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-
-data class Location(
-    val city: String,
-    val country: String,
-    val points: Int,
-    val distance: Int
-)
+import com.example.locationapp.viewmodel.ProfileViewModel
+import com.example.locationapp.R
+import androidx.compose.ui.res.painterResource
 
 @Composable
-fun ProfilePage() {
-    val userData = remember {
-        UserData(
-            name = "Alex Thompson",
-            email = "alex.thompson@email.com",
-            profileImage = "https://images.unsplash.com/photo-1570170609489-43197f518df0",
-            totalPoints = 8450,
-            topLocations = listOf(
-                Location("Tokyo", "Japan", 2150, 6800),
-                Location("Sydney", "Australia", 1980, 9500),
-                Location("Barcelona", "Spain", 1620, 4200)
-            ),
-            citiesVisited = 24,
-            countriesVisited = 12
-        )
+fun ProfilePage(viewModel: ProfileViewModel) {
+    val userData by viewModel.user.collectAsState()
+    if (userData == null) {
+        // You can show a loading indicator here
+        return
     }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -90,8 +76,8 @@ fun ProfilePage() {
 
                 // Avatar
                 AsyncImage(
-                    model = userData.profileImage,
-                    contentDescription = userData.name,
+                    model = userData!!.profileImage.ifBlank { R.drawable.profile_fallback },
+                    contentDescription = userData!!.userName,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(112.dp)
@@ -101,10 +87,10 @@ fun ProfilePage() {
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Text(userData.name, color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+                Text(userData!!.userName, color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Medium)
 
                 Text(
-                    userData.email,
+                    userData!!.email,
                     color = Color(0xFFB6B09F),
                     fontSize = 14.sp,
                     modifier = Modifier.padding(top = 4.dp)
@@ -122,7 +108,7 @@ fun ProfilePage() {
                     Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        "${userData.totalPoints} Points",
+                        "${userData!!.points.toInt()} Points",
                         color = Color.White,
                         fontWeight = FontWeight.Medium
                     )
@@ -135,53 +121,57 @@ fun ProfilePage() {
             Text("Top 3 Locations", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(12.dp))
 
-            userData.topLocations.forEachIndexed { index, location ->
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+            if (userData!!.topLocations.isEmpty()) {
+                Text("No locations visited yet.", color = Color(0xFFB6B09F), modifier = Modifier.padding(vertical = 8.dp))
+            } else {
+                userData!!.topLocations.forEachIndexed { index, location ->
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        elevation = CardDefaults.cardElevation(2.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.Black),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("#${index + 1}", color = Color.White)
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.Black),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("#${index + 1}", color = Color.White)
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(location.city, color = Color.Black, fontWeight = FontWeight.Medium)
+                                    Text(location.country, color = Color(0xFFB6B09F), fontSize = 12.sp)
+                                }
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(location.city, color = Color.Black, fontWeight = FontWeight.Medium)
-                                Text(location.country, color = Color(0xFFB6B09F), fontSize = 12.sp)
-                            }
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Surface(
-                                color = Color(0xFFB6B09F),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
+                            Column(horizontalAlignment = Alignment.End) {
+                                Surface(
+                                    color = Color(0xFFB6B09F),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(
+                                        "${location.points} pts",
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
                                 Text(
-                                    "${location.points} pts",
-                                    color = Color.White,
+                                    "${location.distance} km",
+                                    color = Color(0xFFB6B09F),
                                     fontSize = 12.sp,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    modifier = Modifier.padding(top = 4.dp)
                                 )
                             }
-                            Text(
-                                "${location.distance} km",
-                                color = Color(0xFFB6B09F),
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
                         }
                     }
                 }
@@ -194,8 +184,8 @@ fun ProfilePage() {
                     .padding(top = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                StatCard("Cities Visited", userData.citiesVisited.toString(), modifier = Modifier.weight(1f))
-                StatCard("Countries", userData.countriesVisited.toString(), modifier = Modifier.weight(1f))
+                StatCard("Cities Visited", userData!!.citiesVisited.toString(), modifier = Modifier.weight(1f))
+                StatCard("Countries", userData!!.countriesVisited.toString(), modifier = Modifier.weight(1f))
             }
         }
     }
@@ -231,15 +221,3 @@ fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
         }
     }
 }
-
-
-
-data class UserData(
-    val name: String,
-    val email: String,
-    val profileImage: String,
-    val totalPoints: Int,
-    val topLocations: List<Location>,
-    val citiesVisited: Int,
-    val countriesVisited: Int
-)

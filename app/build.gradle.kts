@@ -85,6 +85,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.analytics)
 
+    implementation(libs.play.services.location)
 
 }
 
