@@ -28,12 +28,15 @@ fun SetHomePage(
     viewModel: SetHomeViewModel,
     onHomeSet: () -> Unit
 ) {
-    val user by viewModel.user.collectAsState()
+    // This state holds the locally detected location info
+    val detectedLocationState by viewModel.detectedLocation.collectAsState()
+
     val searchText by viewModel.searchText.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
 
-    val detectedLocation = user?.currentLocation?.takeIf { it.isNotBlank() }
+    // Use the new state. It's already in the CitySearchResult format.
+    val detectedLocation = detectedLocationState.takeIf { it.formattedAddress.isNotBlank() }
 
     Column(
         modifier = Modifier
@@ -81,12 +84,11 @@ fun SetHomePage(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Show detected location as the first, special option if available and no search is active
-                if (detectedLocation != null && user != null && searchText.isEmpty()) {
+                if (detectedLocation != null && searchText.isEmpty()) {
                     item {
                         Text("Detected Location:", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         CityRow(
-                            // The detected location might not be fully formatted, so we create a simple CitySearchResult for it
-                            city = CitySearchResult(detectedLocation, user!!.currentLatitude, user!!.currentLongitude),
+                            city = detectedLocation,
                             onClick = { city -> viewModel.setHomeLocation(city, onHomeSet) }
                         )
                     }

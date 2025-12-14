@@ -65,62 +65,18 @@ class AuthRepository(context: Context) {
     suspend fun getCurrentUser(): Result<User> {
         return try {
             val uid = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
-
-            // 1. Get user data from Firestore
             val userSnapshot = users.document(uid).get().await()
-            val user = userSnapshot.toObject(User::class.java)!!
+            val user = userSnapshot.toObject(User::class.java)
+                ?: return Result.failure(Exception("User data not found in Firestore."))
 
-            // 2. Get fresh GPS location
-            val deviceLocation = locationService.getFreshCurrentLocation() ?: return Result.success(user) // Return old user data if location fails
-
-            // 3. Reverse Geocode: Get city name from coordinates
-            val currentCity = locationService.getCityFromCoordinates(deviceLocation.latitude, deviceLocation.longitude)
-
-            // If we are not in a city (e.g., on a highway), clear the current location info
-            if (currentCity == null) {
-                val updates = mapOf(
-                    "currentLocation" to "",
-                    "currentLocationImage" to "",
-                    "currentLatitude" to deviceLocation.latitude,
-                    "currentLongitude" to deviceLocation.longitude
-                )
-                users.document(uid).set(updates, SetOptions.merge()).await()
-                return Result.success(user.copy(currentLocation = "", currentLocationImage = "", currentLatitude = deviceLocation.latitude, currentLongitude = deviceLocation.longitude))
-            }
-
-            // 4. If the city hasn't changed, just update coordinates and return
-            if (currentCity == user.currentLocation && user.currentLatitude == deviceLocation.latitude && user.currentLongitude == deviceLocation.longitude) {
-                return Result.success(user) // No change, no write needed
-            }
-
-            // 5. City or Coordinates have changed, update Firestore
-            val cityImage = getCityImage(currentCity)
-            val updates = mapOf(
-                "currentLocation" to currentCity,
-                "currentLocationImage" to cityImage,
-                "currentLatitude" to deviceLocation.latitude,
-                "currentLongitude" to deviceLocation.longitude
-            )
-            users.document(uid).set(updates, SetOptions.merge()).await()
-
-            // 6. Return the fully updated user object
-            val updatedUser = user.copy(
-                currentLocation = currentCity,
-                currentLocationImage = cityImage,
-                currentLatitude = deviceLocation.latitude,
-                currentLongitude = deviceLocation.longitude
-            )
-            Result.success(updatedUser)
+            Result.success(user)
 
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-
     private fun getCityImage(city: String): String {
-        // In a real app, you would make a network request here.
-        // For now, let's return a consistent placeholder based on the city.
         return when (city.lowercase()) {
             "tokyo" -> "https://images.unsplash.com/photo-1542051841857-5f90071e7989"
             "cluj-napoca" -> "https://images.unsplash.com/photo-1570168007204-dfb528c6958f"
@@ -128,7 +84,11 @@ class AuthRepository(context: Context) {
         }
     }
 
-    suspend fun claimCurrentCity(): Result<Unit> {
+    suspend fun claimCurrentCity(
+        currentCity: String,
+        currentLatitude: Double,
+        currentLongitude: Double
+    ): Result<Unit> {
         return try {
             val uid = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
             val userRef = users.document(uid)
@@ -140,14 +100,14 @@ class AuthRepository(context: Context) {
                 val userSnapshot = transaction.get(userRef)
                 val user = userSnapshot.toObject(User::class.java)!!
 
-                // 2. Read the location document (even if it might not exist yet)
-                val cityId = user.currentLocation.replace(" ", "_").lowercase()
+                // 2. Read the location document
+                val cityId = currentCity.replace(" ", "_").lowercase()
                 val locationRef = locations.document(cityId)
                 val locationSnapshot = transaction.get(locationRef)
 
                 // --- PERFORM LOGIC AND CHECKS ---
                 // 3. Safety Check: Ensure the location is valid and not already visited
-                if (user.currentLocation.isBlank() || user.visitedCities.contains(user.currentLocation)) {
+                if (currentCity.isBlank() || user.visitedCities.contains(currentCity)) {
                     throw Exception("City is not claimable.")
                 }
 
@@ -158,28 +118,26 @@ class AuthRepository(context: Context) {
                 // 5. Write to the User Document
                 transaction.update(userRef, mapOf(
                     "points" to FieldValue.increment(pointsToAward),
-                    "visitedCities" to FieldValue.arrayUnion(user.currentLocation),
+                    "visitedCities" to FieldValue.arrayUnion(currentCity),
                     "citiesVisited" to FieldValue.increment(1)
                 ))
 
                 // 6. Write to the Global Location Document
+                val cityImage = getCityImage(currentCity) // Get image here
                 if (locationSnapshot.exists()) {
-                    // If the location exists, increment its counters
                     transaction.update(locationRef, mapOf(
                         "totalVisits" to FieldValue.increment(1),
                         "totalPointsAwarded" to FieldValue.increment(pointsToAward),
                         "lastVisited" to FieldValue.serverTimestamp()
                     ))
                 } else {
-                    // If it's a new location, create its document using the Location model
                     val newLocation = Location(
-                        city = user.currentLocation,
-                        latitude = user.currentLatitude,
-                        longitude = user.currentLongitude,
-                        image = user.currentLocationImage,
+                        city = currentCity,
+                        latitude = currentLatitude,
+                        longitude = currentLongitude,
+                        image = cityImage,
                         totalVisits = 1,
                         totalPointsAwarded = pointsToAward
-                        // lastVisited is set by @ServerTimestamp or FieldValue
                     )
                     transaction.set(locationRef, newLocation)
                 }

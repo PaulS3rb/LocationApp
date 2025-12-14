@@ -3,7 +3,6 @@ package com.example.locationapp.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.locationapp.model.User
 import com.example.locationapp.repository.AuthRepository
 import com.example.locationapp.repository.LocationService
 import kotlinx.coroutines.Job
@@ -12,9 +11,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-// Represents a search result for the user to choose from
+
 data class CitySearchResult(
-    val formattedAddress: String, // Changed from cityName
+    val formattedAddress: String,
     val latitude: Double,
     val longitude: Double
 )
@@ -24,8 +23,13 @@ class SetHomeViewModel(
     private val locationService: LocationService
 ) : ViewModel() {
 
-    private val _user = MutableStateFlow<User?>(null)
-    val user = _user.asStateFlow()
+    // REMOVED: The _user state is no longer needed here.
+    // private val _user = MutableStateFlow<User?>(null)
+    // val user = _user.asStateFlow()
+
+    // --- NEW: State for the locally detected location ---
+    private val _detectedLocation = MutableStateFlow(CitySearchResult("", 0.0, 0.0))
+    val detectedLocation = _detectedLocation.asStateFlow()
 
     private val _searchText = MutableStateFlow("")
     val searchText = _searchText.asStateFlow()
@@ -39,10 +43,19 @@ class SetHomeViewModel(
     private var searchJob: Job? = null
 
     init {
-        // Fetch the user to get their auto-detected current location
+        // Fetch the device's current location directly, instead of the whole user object.
         viewModelScope.launch {
-            authRepository.getCurrentUser().onSuccess {
-                _user.value = it
+            val deviceLocation = locationService.getFreshCurrentLocation()
+            if (deviceLocation != null) {
+                val city = locationService.getCityFromCoordinates(deviceLocation.latitude, deviceLocation.longitude)
+                if (city != null) {
+                    // Update our local detectedLocation state
+                    _detectedLocation.value = CitySearchResult(
+                        formattedAddress = city,
+                        latitude = deviceLocation.latitude,
+                        longitude = deviceLocation.longitude
+                    )
+                }
             }
         }
     }
@@ -61,10 +74,9 @@ class SetHomeViewModel(
             val results = locationService.getCoordinatesFromCityName(text)
             _searchResults.value = results
                 .mapNotNull { address ->
-                    // Use the new formatter and filter out results without a city name
                     if (address.locality != null) {
                         CitySearchResult(
-                            formattedAddress = locationService.getFormattedAddress(address), // <-- USE THE FORMATTER
+                            formattedAddress = locationService.getFormattedAddress(address),
                             latitude = address.latitude,
                             longitude = address.longitude
                         )
@@ -72,7 +84,7 @@ class SetHomeViewModel(
                         null
                     }
                 }
-                .distinctBy { it.formattedAddress } // Remove duplicate entries
+                .distinctBy { it.formattedAddress }
 
             _isSearching.value = false
         }
