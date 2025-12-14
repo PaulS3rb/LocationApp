@@ -27,23 +27,25 @@ import com.example.locationapp.viewmodel.HomeViewModel
 
 @Composable
 fun HomePage(viewModel: HomeViewModel) {
+    // Collect state for the static user profile (points, name, etc.)
     val user by viewModel.user.collectAsState()
+    // Collect state for the DYNAMIC, locally-managed current location
+    val currentLocation by viewModel.currentLocation.collectAsState()
+
     val potentialPoints by viewModel.potentialPoints.collectAsState()
     val isClaimable by viewModel.isClaimable.collectAsState()
     val isClaiming by viewModel.isClaiming.collectAsState()
-    val claimResult by viewModel.claimResult.collectAsState() // Collect the new state
+    val claimResult by viewModel.claimResult.collectAsState()
 
-    // --- ADD SNACKBAR HOST STATE ---
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // --- SHOW SNACKBAR WHEN CLAIM RESULT CHANGES ---
     LaunchedEffect(claimResult) {
         claimResult?.let { message ->
             snackbarHostState.showSnackbar(message)
         }
     }
 
-    // Return a loading indicator or an empty screen until the user data is ready
+    // Show a loading indicator until both user and initial location are ready
     if (user == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -51,19 +53,16 @@ fun HomePage(viewModel: HomeViewModel) {
         return
     }
 
-    // --- WRAP IN SCAFFOLD TO HOST THE SNACKBAR ---
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        containerColor = Color(0xFFEAE4D5) // Match your background color
+        containerColor = Color(0xFFEAE4D5)
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding) // Use padding from scaffold
+                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // ... (The rest of your Column content remains exactly the same)
-
             /* ---------------- HEADER ---------------- */
             Column(
                 modifier = Modifier
@@ -99,7 +98,6 @@ fun HomePage(viewModel: HomeViewModel) {
                     .padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-
                 /* -------- ACTION CARD: CURRENT LOCATION -------- */
                 Card(
                     colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -108,9 +106,10 @@ fun HomePage(viewModel: HomeViewModel) {
                 ) {
                     Column {
                         Box(modifier = Modifier.height(180.dp)) {
+                            // Use the local currentLocation state for the image
                             AsyncImage(
-                                model = user!!.currentLocationImage,
-                                contentDescription = user!!.currentLocation,
+                                model = currentLocation.cityImage,
+                                contentDescription = currentLocation.cityName,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -129,8 +128,9 @@ fun HomePage(viewModel: HomeViewModel) {
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text("Current Location", color = Color.White.copy(alpha = 0.9f), fontSize = 14.sp)
                                 }
+                                // Use the local currentLocation state for the city name
                                 Text(
-                                    if (user!!.currentLocation.isNotBlank()) user!!.currentLocation else "No City Detected",
+                                    if (currentLocation.cityName.isNotBlank()) currentLocation.cityName else "Locating...",
                                     color = Color.White,
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Bold
@@ -141,7 +141,8 @@ fun HomePage(viewModel: HomeViewModel) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             if (isClaimable) {
                                 Text("New City Detected!", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                Text("Claim your points for traveling to ${user!!.currentLocation}.", color = Color(0xFF6B6658), fontSize = 14.sp)
+                                // Use the local currentLocation state for the descriptive text
+                                Text("Claim your points for traveling to ${currentLocation.cityName}.", color = Color(0xFF6B6658), fontSize = 14.sp)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Button(
                                     onClick = { viewModel.claimPoints() },
@@ -161,8 +162,9 @@ fun HomePage(viewModel: HomeViewModel) {
                                         Text("CLAIM $potentialPoints POINTS", fontWeight = FontWeight.Bold)
                                     }
                                 }
-                            } else if (user!!.currentLocation.isNotBlank()) {
-                                Text("Welcome back to ${user!!.currentLocation}", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            } else if (currentLocation.cityName.isNotBlank()) {
+                                // Use the local currentLocation state here as well
+                                Text("Welcome back to ${currentLocation.cityName}", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                                 Text("You have already claimed points for this city.", color = Color(0xFF6B6658), fontSize = 14.sp)
                             } else {
                                 Text("You are at your Home Base", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)

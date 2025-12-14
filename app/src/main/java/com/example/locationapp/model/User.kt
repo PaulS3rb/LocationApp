@@ -8,12 +8,10 @@ data class User(
     val profileImage: String = "",
     val citiesVisited: Int = 0,
     val countriesVisited: Int = 0,
-    val currentLatitude: Double = 0.0,
-    val currentLongitude: Double = 0.0,
     val homeLatitude: Double = 0.0,
     val homeLongitude: Double = 0.0,
-    val currentLocation: String = "",
-    val currentLocationImage: String = "",
-    val visitedCities: List<String> = emptyList()
+    val visitedCities: List<String> = emptyList(),
+    val visitedCountries: List<String> = emptyList(),
+    val hasSetHome: Boolean = false
 
 )

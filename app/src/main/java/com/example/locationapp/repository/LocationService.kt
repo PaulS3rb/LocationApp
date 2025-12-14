@@ -2,6 +2,7 @@ package com.example.locationapp.repository
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.location.Address
 import android.location.Geocoder
 import android.os.Build
 import com.google.android.gms.location.LocationServices
@@ -57,4 +58,38 @@ class LocationService(private val context: Context) {
             }
         }
     }
+
+    suspend fun getCoordinatesFromCityName(cityName: String, maxResults: Int = 5): List<Address> {
+        return withContext(Dispatchers.IO) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    suspendCancellableCoroutine { continuation ->
+                        geocoder.getFromLocationName(cityName, maxResults) { addresses ->
+                            if (continuation.isActive) {
+                                continuation.resume(addresses)
+                            }
+                        }
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    geocoder.getFromLocationName(cityName, maxResults) ?: emptyList()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+        }
+    }
+
+    fun getFormattedAddress(address: Address): String {
+        // We use a set to avoid duplicates (e.g., if city and admin area are the same)
+        val parts = linkedSetOf<String>()
+
+        address.locality?.let { parts.add(it) } // City
+        address.adminArea?.let { parts.add(it) } // State or Region
+        address.countryName?.let { parts.add(it) } // Country
+
+        return parts.joinToString(", ")
+    }
+
 }
