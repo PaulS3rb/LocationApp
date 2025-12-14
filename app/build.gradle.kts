@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.example.locationapp"
-    compileSdk = 34
+    compileSdk = 35
 
 
     defaultConfig {
         applicationId = "com.example.locationapp"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -45,9 +45,9 @@ android {
 
 dependencies {
 
-    implementation(libs.play.services.maps)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.constraintlayout)
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     val room_version = "2.8.3"
 
     implementation(libs.androidx.core.ktx)
