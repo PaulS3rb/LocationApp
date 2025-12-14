@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -30,6 +31,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.locationapp.repository.AuthRepository
 import com.example.locationapp.ui.Pages.FriendsPage
+import com.example.locationapp.ui.Pages.MapPage
 import com.example.locationapp.ui.Pages.ProfilePage
 import com.example.locationapp.ui.auth.AuthScreen
 import com.example.locationapp.ui.theme.BackgroundColor
@@ -94,6 +96,7 @@ fun LocationAppApp() {
                     AppDestinations.HOME -> HomePage()
                     AppDestinations.FRIENDS -> FriendsPage()
                     AppDestinations.PROFILE -> ProfilePage()
+                    AppDestinations.MAP -> MapPage()
                 }
             }
         }
@@ -110,6 +113,8 @@ enum class AppDestinations(
     FRIENDS("Friends", Icons.Default.Person),
 
     PROFILE("Profile", Icons.Default.AccountBox),
+
+    MAP("Map", Icons.Default.Map)
 
 
 }
