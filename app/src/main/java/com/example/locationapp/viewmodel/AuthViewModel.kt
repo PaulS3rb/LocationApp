@@ -72,6 +72,8 @@ class AuthViewModel(private val repo: AuthRepository) : ViewModel() {
     fun resetAuthState() {
         _authState.value = AuthState.Idle
     }
+
+
 }
 
 class AuthViewModelFactory(private val repo: AuthRepository) : ViewModelProvider.Factory {

@@ -14,6 +14,7 @@ data class User(
     val homeLongitude: Double = 0.0,
     val currentLocation: String = "",
     val currentLocationImage: String = "",
-    val visitedCities: List<String> = emptyList()
+    val visitedCities: List<String> = emptyList(),
+    val hasSetHome: Boolean = false
 
 )

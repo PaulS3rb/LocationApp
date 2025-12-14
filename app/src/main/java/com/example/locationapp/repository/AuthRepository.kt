@@ -192,4 +192,30 @@ class AuthRepository(context: Context) {
             Result.failure(e)
         }
     }
+
+    suspend fun setHomeLocation(latitude: Double, longitude: Double): Result<Unit> {
+        return try {
+            val uid = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
+            val userRef = users.document(uid)
+
+            if (latitude == 0.0 || longitude == 0.0) {
+                return Result.failure(Exception("Invalid home location coordinates."))
+            }
+
+            // Prepare the updates
+            val homeUpdates = mapOf(
+                "homeLatitude" to latitude,
+                "homeLongitude" to longitude,
+                "hasSetHome" to true
+            )
+
+            userRef.update(homeUpdates).await()
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
 }

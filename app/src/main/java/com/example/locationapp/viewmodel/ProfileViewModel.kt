@@ -41,6 +41,7 @@ class ProfileViewModel(
             }
         }
     }
+
 }
 
 class ProfileViewModelFactory(
