@@ -86,6 +86,9 @@ dependencies {
     implementation(libs.firebase.analytics)
 
     implementation(libs.play.services.location)
+    implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.accompanist.swiperefresh)
+
 
 }
 

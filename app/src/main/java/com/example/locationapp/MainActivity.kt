@@ -29,8 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.content.ContextCompat
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
 import com.example.locationapp.repository.AuthRepository
 import com.example.locationapp.repository.LocationRepository
 import com.example.locationapp.ui.Pages.FriendsPage
@@ -52,11 +50,9 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
                 // Permission is granted. You can now fetch data that needs location.
-                // We can trigger a refresh in the viewmodel here.
                 homeViewModel.fetchData() // Re-fetch data now that we have permission
             } else {
-                // Explain to the user that the feature is unavailable because the
-                // features requires a permission that the user has denied.
+                // Explain to the user that the feature is unavailable.
             }
         }
 
@@ -66,10 +62,10 @@ class MainActivity : ComponentActivity() {
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED -> {
-                // Permission is already granted. You're good to go.
+                // Permission is already granted.
             }
             shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
-                // Show a dialog explaining why you need the permission
+                // Optionally show a dialog explaining why you need the permission.
             }
             else -> {
                 // Directly ask for the permission.
@@ -84,7 +80,8 @@ class MainActivity : ComponentActivity() {
     private val profileViewModel: ProfileViewModel by viewModels{
         ProfileViewModelFactory(
             AuthRepository(applicationContext),
-            LocationRepository())
+            LocationRepository()
+        )
     }
     private val homeViewModel: HomeViewModel by viewModels {
         HomeViewModelFactory(
@@ -92,8 +89,6 @@ class MainActivity : ComponentActivity() {
             LocationRepository()
         )
     }
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,9 +98,9 @@ class MainActivity : ComponentActivity() {
             // This now correctly reflects the user's auth status from the ViewModel
             val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
-            Surface(color = BackgroundColor) {
+            Surface(modifier = Modifier.fillMaxSize(), color = BackgroundColor) {
                 if (isAuthenticated) {
-                    LocationAppApp(profileViewModel, homeViewModel)
+                    LocationAppApp(profileViewModel, homeViewModel, authViewModel)
                 } else {
                     // The callbacks are now simplified because the ViewModel handles the state change
                     AuthScreen(
@@ -119,21 +114,33 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
-fun LocationAppApp(profileViewModel: ProfileViewModel, homeViewModel: HomeViewModel) {
+fun LocationAppApp(
+    profileViewModel: ProfileViewModel,
+    homeViewModel: HomeViewModel,
+    authViewModel: AuthViewModel // Pass authViewModel
+) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
-            AppDestinations.entries.forEach {
+            AppDestinations.entries.forEach { destination ->
                 item(
                     icon = {
-                        Icon(it.icon, contentDescription = it.label)
+                        Icon(destination.icon, contentDescription = destination.label)
                     },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
+                    label = { Text(destination.label) },
+                    selected = destination == currentDestination,
+                    onClick = {
+                        currentDestination = destination
+                        // --- ADD THIS LOGIC ---
+                        // When a tab is clicked, refresh its data
+                        when (destination) {
+                            AppDestinations.HOME -> homeViewModel.fetchData()
+                            AppDestinations.PROFILE -> profileViewModel.fetchData()
+                            AppDestinations.FRIENDS -> { /* Handle Friends refresh if needed */ }
+                        }
+                    }
                 )
             }
         }
@@ -143,7 +150,7 @@ fun LocationAppApp(profileViewModel: ProfileViewModel, homeViewModel: HomeViewMo
                 when (currentDestination) {
                     AppDestinations.HOME -> HomePage(homeViewModel)
                     AppDestinations.FRIENDS -> FriendsPage()
-                    AppDestinations.PROFILE -> ProfilePage(profileViewModel)
+                    AppDestinations.PROFILE -> ProfilePage(profileViewModel, authViewModel)
                 }
             }
         }
@@ -151,26 +158,12 @@ fun LocationAppApp(profileViewModel: ProfileViewModel, homeViewModel: HomeViewMo
 }
 
 
+
 enum class AppDestinations(
     val label: String,
     val icon: ImageVector,
 ) {
     HOME("Home", Icons.Default.Home),
-
     FRIENDS("Friends", Icons.Default.Person),
-
     PROFILE("Profile", Icons.Default.AccountBox),
-
-
-}
-@Composable
-fun LocationAppNavigation() {
-    val navController = rememberNavController()
-
-    NavHost(
-        navController = navController,
-        startDestination = "auth"
-    ) {
-        // You can define your navigation graph here later
-    }
 }

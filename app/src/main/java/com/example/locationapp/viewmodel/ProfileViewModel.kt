@@ -20,7 +20,6 @@ class ProfileViewModel(
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
 
-    // StateFlow to hold the global top locations
     private val _topLocations = MutableStateFlow<List<Location>>(emptyList())
     val topLocations: StateFlow<List<Location>> = _topLocations.asStateFlow()
 
@@ -28,7 +27,8 @@ class ProfileViewModel(
         fetchData()
     }
 
-    private fun fetchData() {
+    // Make fetchData public to be called from the UI
+    fun fetchData() {
         viewModelScope.launch {
             // Fetch user data
             authRepository.getCurrentUser().onSuccess {
