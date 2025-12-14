@@ -11,6 +11,7 @@ data class User(
     val homeLatitude: Double = 0.0,
     val homeLongitude: Double = 0.0,
     val visitedCities: List<String> = emptyList(),
+    val visitedCountries: List<String> = emptyList(),
     val hasSetHome: Boolean = false
 
 )

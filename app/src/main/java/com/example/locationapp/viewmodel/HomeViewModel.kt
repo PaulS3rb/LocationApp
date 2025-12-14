@@ -85,6 +85,24 @@ class HomeViewModel(
                 } else {
                     _potentialPoints.value = 0
                 }
+
+                if (_isClaimable.value) {
+                    val distance = calculateDistance(
+                        dbUser.homeLatitude,
+                        dbUser.homeLongitude,
+                        _currentLocation.value.latitude,
+                        _currentLocation.value.longitude
+                    )
+                    val distancePoints = kotlin.math.max(25.0, distance * 0.5).toInt()
+
+                    // For simplicity, we assume if it's claimable, it's a "discovery" for point preview.
+                    // A more complex implementation could check Firestore here too.
+                    val discoveryBonus = if (!dbUser.visitedCities.contains(_currentLocation.value.cityName)) 200 else 0
+
+                    _potentialPoints.value = distancePoints + discoveryBonus
+                } else {
+                    _potentialPoints.value = 0
+                }
             }
         }
     }
@@ -115,6 +133,17 @@ class HomeViewModel(
             }
             _isClaiming.value = false
         }
+    }
+
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val r = 6371 // Radius of Earth in kilometers
+        val latDistance = Math.toRadians(lat2 - lat1)
+        val lonDistance = Math.toRadians(lon2 - lon1)
+        val a = kotlin.math.sin(latDistance / 2) * kotlin.math.sin(latDistance / 2) +
+                kotlin.math.cos(Math.toRadians(lat1)) * kotlin.math.cos(Math.toRadians(lat2)) *
+                kotlin.math.sin(lonDistance / 2) * kotlin.math.sin(lonDistance / 2)
+        val c = 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
+        return r * c
     }
 }
 

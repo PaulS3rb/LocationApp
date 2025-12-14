@@ -9,6 +9,11 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class AuthRepository(context: Context) {
 
@@ -112,10 +117,20 @@ class AuthRepository(context: Context) {
                 }
 
                 // 4. Calculate Points
-                val pointsToAward = 350L // Mock points
+                val distance = calculateDistance(
+                    user.homeLatitude,
+                    user.homeLongitude,
+                    currentLatitude,
+                    currentLongitude
+                )
 
-                // --- ALL WRITES MUST BE LAST ---
-                // 5. Write to the User Document
+                val distancePoints = max(25.0, distance * 0.5).toLong()
+
+                val discoveryBonus = if (!locationSnapshot.exists() || locationSnapshot.getLong("totalVisits") == 0L) 200L else 0L
+
+                val pointsToAward = distancePoints + discoveryBonus
+
+
                 transaction.update(userRef, mapOf(
                     "points" to FieldValue.increment(pointsToAward),
                     "visitedCities" to FieldValue.arrayUnion(currentCity),
@@ -149,6 +164,17 @@ class AuthRepository(context: Context) {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val r = 6371 // Radius of Earth in kilometers
+        val latDistance = Math.toRadians(lat2 - lat1)
+        val lonDistance = Math.toRadians(lon2 - lon1)
+        val a = sin(latDistance / 2) * sin(latDistance / 2) +
+                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+                sin(lonDistance / 2) * sin(lonDistance / 2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return r * c // returns distance in kilometers
     }
 
     suspend fun setHomeLocation(latitude: Double, longitude: Double): Result<Unit> {
