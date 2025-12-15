@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ import com.example.locationapp.repository.AuthRepository
 import com.example.locationapp.repository.LocationRepository
 import com.example.locationapp.repository.LocationService
 import com.example.locationapp.ui.Pages.FriendsPage
+import com.example.locationapp.ui.Pages.MapPage
 import com.example.locationapp.ui.Pages.HomePage
 import com.example.locationapp.ui.Pages.ProfilePage
 import com.example.locationapp.ui.Pages.SetHomePage
@@ -192,6 +194,7 @@ fun LocationAppApp(
                 when (currentDestination) {
                     AppDestinations.HOME -> HomePage(homeViewModel)
                     AppDestinations.FRIENDS -> FriendsPage()
+                    AppDestinations.MAP -> MapPage()
                     AppDestinations.PROFILE -> ProfilePage(profileViewModel, authViewModel)
                 }
             }
@@ -206,4 +209,19 @@ enum class AppDestinations(
     HOME("Home", Icons.Default.Home),
     FRIENDS("Friends", Icons.Default.Person),
     PROFILE("Profile", Icons.Default.AccountBox),
+    MAP("Map", Icons.Default.Map)
+
+
+}
+@Composable
+fun LocationAppNavigation() {
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = "auth"
+    ) {
+        // You can define your navigation graph here later
+    }
+
 }
