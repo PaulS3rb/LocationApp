@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.locationapp.repository.AuthRepository
+import com.google.firebase.auth.FirebaseAuth
+
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -20,6 +22,10 @@ class AuthViewModel(private val repo: AuthRepository) : ViewModel() {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState = _authState.asStateFlow()
 
+    private val _isAuthenticated = MutableStateFlow(FirebaseAuth.getInstance().currentUser != null)
+    val isAuthenticated = _isAuthenticated.asStateFlow()
+
+
     fun signup(userName: String, email: String, password: String, confirmPassword: String) {
         viewModelScope.launch {
             if (password != confirmPassword) {
@@ -29,10 +35,12 @@ class AuthViewModel(private val repo: AuthRepository) : ViewModel() {
 
             _authState.value = AuthState.Loading
 
+            // This call will now succeed because the function exists in the repository
             val result = repo.signup(userName, email, password)
 
             result.onSuccess {
-                _authState.value = AuthState.Success("Signup successful!")
+                _authState.value = AuthState.Success("Successfully authenticated") // Changed
+                _isAuthenticated.value = true // Update our new flow
             }.onFailure {
                 _authState.value = AuthState.Error(it.message ?: "Unknown error")
             }
@@ -43,19 +51,29 @@ class AuthViewModel(private val repo: AuthRepository) : ViewModel() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
 
+            // This call will also succeed now
             val result = repo.login(email, password)
 
             result.onSuccess {
-                _authState.value = AuthState.Success("Login successful!")
+                _authState.value = AuthState.Success("Successfully authenticated") // Changed
+                _isAuthenticated.value = true // Update our new flow
             }.onFailure {
                 _authState.value = AuthState.Error(it.message ?: "Invalid email or password.")
             }
         }
     }
 
+    // --- NEW LOGOUT FUNCTION ---
+    fun logout() {
+        repo.logout()
+        _isAuthenticated.value = false
+    }
+
     fun resetAuthState() {
         _authState.value = AuthState.Idle
     }
+
+
 }
 
 class AuthViewModelFactory(private val repo: AuthRepository) : ViewModelProvider.Factory {
@@ -67,4 +85,3 @@ class AuthViewModelFactory(private val repo: AuthRepository) : ViewModelProvider
         throw IllegalArgumentException("Unknown ViewModel")
     }
 }
-
