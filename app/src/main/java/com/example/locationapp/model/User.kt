@@ -1,7 +1,9 @@
 package com.example.locationapp.model
 
+import com.google.firebase.firestore.DocumentId
 
 data class User(
+    @DocumentId val userId: String = "",
     val userName: String = "",
     val email: String = "",
     val points: Float = 0f,
@@ -13,5 +15,4 @@ data class User(
     val visitedCities: List<String> = emptyList(),
     val visitedCountries: List<String> = emptyList(),
     val hasSetHome: Boolean = false
-
 )

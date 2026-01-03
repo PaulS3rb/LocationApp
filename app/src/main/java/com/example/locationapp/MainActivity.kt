@@ -33,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.content.ContextCompat
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import com.example.locationapp.repository.AuthRepository
 import com.example.locationapp.repository.LocationRepository
 import com.example.locationapp.repository.LocationService
@@ -51,6 +53,10 @@ import com.example.locationapp.viewmodel.ProfileViewModel
 import com.example.locationapp.viewmodel.ProfileViewModelFactory
 import com.example.locationapp.viewmodel.SetHomeViewModel
 import com.example.locationapp.viewmodel.SetHomeViewModelFactory
+import com.example.locationapp.viewmodel.FriendsViewModel
+import com.example.locationapp.viewmodel.FriendsViewModelFactory
+import com.example.locationapp.repository.FriendRepository
+
 
 class MainActivity : ComponentActivity() {
 
@@ -92,6 +98,11 @@ class MainActivity : ComponentActivity() {
             LocationRepository()
         )
     }
+
+    // Inside MainActivity class
+    private val friendsViewModel: FriendsViewModel by viewModels {
+        FriendsViewModelFactory(FriendRepository())
+    }
     private val homeViewModel: HomeViewModel by viewModels {
         HomeViewModelFactory(
             AuthRepository(applicationContext),
@@ -130,7 +141,7 @@ class MainActivity : ComponentActivity() {
                         // Once we have the user object, check if home has been set
                         if (user!!.hasSetHome) {
                             // If home IS set, show the main app.
-                            LocationAppApp(profileViewModel, homeViewModel, authViewModel)
+                            LocationAppApp(profileViewModel, homeViewModel, authViewModel, friendsViewModel)
                         } else {
                             // If home is NOT set, show the setup page.
                             SetHomePage(
@@ -163,7 +174,8 @@ class MainActivity : ComponentActivity() {
 fun LocationAppApp(
     profileViewModel: ProfileViewModel,
     homeViewModel: HomeViewModel,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    friendsViewModel: FriendsViewModel
 ) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
 
@@ -182,7 +194,8 @@ fun LocationAppApp(
                         when (destination) {
                             AppDestinations.HOME -> homeViewModel.fetchData()
                             AppDestinations.PROFILE -> profileViewModel.fetchData()
-                            AppDestinations.FRIENDS -> { /* Handle Friends refresh if needed */ }
+                            AppDestinations.FRIENDS -> { friendsViewModel.fetchFriends()}
+                            AppDestinations.MAP -> { /* Handle Map refresh if needed */ }
                         }
                     }
                 )
@@ -193,7 +206,7 @@ fun LocationAppApp(
             Box(modifier = Modifier.padding(innerPadding)) {
                 when (currentDestination) {
                     AppDestinations.HOME -> HomePage(homeViewModel)
-                    AppDestinations.FRIENDS -> FriendsPage()
+                    AppDestinations.FRIENDS -> FriendsPage(friendsViewModel)
                     AppDestinations.MAP -> MapPage()
                     AppDestinations.PROFILE -> ProfilePage(profileViewModel, authViewModel)
                 }
