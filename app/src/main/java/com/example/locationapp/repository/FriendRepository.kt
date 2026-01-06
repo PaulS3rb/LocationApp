@@ -196,7 +196,25 @@ class FriendRepository {
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
+
+    suspend fun getFriendsCount(): Result<Int> {
+        val myUid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            val snapshot = db.collection("users")
+                .document(myUid)
+                .collection("friends")
+                .get()
+                .await()
+
+            Result.success(snapshot.size())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 }
+
+
 
 // Simple helper model for the sub-collection
 
