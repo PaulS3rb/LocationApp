@@ -87,6 +87,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.analytics)
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 
     implementation(libs.play.services.location)
     implementation(libs.androidx.swiperefreshlayout)

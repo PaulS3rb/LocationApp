@@ -1,33 +1,54 @@
 package com.example.locationapp.ui.Pages
 
-import androidx.compose.runtime.Composable
+import android.annotation.SuppressLint
+import android.location.Location
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.rememberCameraPositionState
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.*
+import com.google.accompanist.permissions.*
 
+@OptIn(ExperimentalPermissionsApi::class)
+@SuppressLint("MissingPermission")
 @Composable
 fun MapPage() {
 
-    val sydney = LatLng(-34.0, 151.0)
+    val locationPermissionState = rememberPermissionState(
+        android.Manifest.permission.ACCESS_FINE_LOCATION
+    )
 
-    val cameraPositionState = rememberCameraPositionState {
-        position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(
-            sydney,
-            10f
-        )
+    val context = LocalContext.current
+    val fusedLocationClient = remember {
+        LocationServices.getFusedLocationProviderClient(context)
+    }
+
+    val cameraPositionState = rememberCameraPositionState()
+
+    LaunchedEffect(locationPermissionState.status) {
+        if (!locationPermissionState.status.isGranted) {
+            locationPermissionState.launchPermissionRequest()
+        } else {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                location?.let {
+                    val userLatLng = LatLng(it.latitude, it.longitude)
+                    cameraPositionState.position =
+                        CameraPosition.fromLatLngZoom(userLatLng, 15f)
+                }
+            }
+        }
     }
 
     GoogleMap(
         modifier = Modifier,
-        cameraPositionState = cameraPositionState
-    ) {
-        Marker(
-            state = MarkerState(position = sydney),
-            title = "Marker in Sydney"
+        cameraPositionState = cameraPositionState,
+        properties = MapProperties(
+            isMyLocationEnabled = locationPermissionState.status.isGranted
+        ),
+        uiSettings = MapUiSettings(
+            myLocationButtonEnabled = true
         )
-    }
+    )
 }
