@@ -19,13 +19,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,167 +44,194 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-
-data class Location(
-    val city: String,
-    val country: String,
-    val points: Int,
-    val distance: Int
-)
+import com.example.locationapp.R
+import com.example.locationapp.viewmodel.AuthViewModel
+import com.example.locationapp.viewmodel.ProfileViewModel
+// --- STEP 2.1: Add the correct Accompanist imports ---
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
-fun ProfilePage() {
-    val userData = remember {
-        UserData(
-            name = "Alex Thompson",
-            email = "alex.thompson@email.com",
-            profileImage = "https://images.unsplash.com/photo-1570170609489-43197f518df0",
-            totalPoints = 8450,
-            topLocations = listOf(
-                Location("Tokyo", "Japan", 2150, 6800),
-                Location("Sydney", "Australia", 1980, 9500),
-                Location("Barcelona", "Spain", 1620, 4200)
-            ),
-            citiesVisited = 24,
-            countriesVisited = 12
-        )
+fun ProfilePage(
+    profileViewModel: ProfileViewModel,
+    authViewModel: AuthViewModel
+) {
+    val userData by profileViewModel.user.collectAsState()
+    val topLocations by profileViewModel.topLocations.collectAsState()
+
+    // --- STEP 2.2: Define the refreshing state ---
+    var isRefreshing by remember { mutableStateOf(false) }
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+
+    // This LaunchedEffect triggers the refresh and handles the loading state
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            profileViewModel.fetchData()
+            // Important: Set refreshing to false once the data is fetched.
+            isRefreshing = false
+        }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFEAE4D5))
-            .padding(bottom = 24.dp)
-            .verticalScroll(rememberScrollState())
-
-    ) {
-        // Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFFF2F2F2))
-                .padding(top = 48.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Profile",
-                    color = Color.Black,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                // Avatar
-                AsyncImage(
-                    model = userData.profileImage,
-                    contentDescription = userData.name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(112.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFB6B09F))
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(userData.name, color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Medium)
-
-                Text(
-                    userData.email,
-                    color = Color(0xFFB6B09F),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Points Badge
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .background(Color.Black, RoundedCornerShape(50))
-                        .padding(horizontal = 20.dp, vertical = 10.dp)
-                ) {
-                    Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.White)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "${userData.totalPoints} Points",
-                        color = Color.White,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
+    val currentUser = userData
+    if (currentUser == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
         }
+        return
+    }
 
-        // Top Locations
-        Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
-            Text("Top 3 Locations", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Spacer(modifier = Modifier.height(12.dp))
-
-            userData.topLocations.forEachIndexed { index, location ->
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    elevation = CardDefaults.cardElevation(2.dp)
+    // --- STEP 2.3: Wrap your content in the SwipeRefresh composable ---
+    SwipeRefresh(
+        state = swipeRefreshState,
+        onRefresh = { isRefreshing = true } // This lambda is called when the user pulls down
+    ) {
+        // The direct child of SwipeRefresh should be the scrollable content.
+        Column(
+            modifier = Modifier
+                .fillMaxSize() // Fill the space given by SwipeRefresh
+                .background(Color(0xFFEAE4D5))
+                .padding(bottom = 24.dp)
+                .verticalScroll(rememberScrollState()) // Make the content scrollable
+        ) {
+            // Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF2F2F2))
+                    .padding(top = 48.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
+                    Text(
+                        text = "Profile",
+                        color = Color.Black,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    AsyncImage(
+                        model = currentUser.profileImage.ifBlank { R.drawable.profile_fallback },
+                        contentDescription = currentUser.userName,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(112.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFB6B09F))
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(currentUser.userName, color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+
+                    Text(
+                        currentUser.email,
+                        color = Color(0xFFB6B09F),
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Row(
-                        modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier
+                            .background(Color.Black, RoundedCornerShape(50))
+                            .padding(horizontal = 20.dp, vertical = 10.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.Black),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("#${index + 1}", color = Color.White)
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(location.city, color = Color.Black, fontWeight = FontWeight.Medium)
-                                Text(location.country, color = Color(0xFFB6B09F), fontSize = 12.sp)
-                            }
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Surface(
-                                color = Color(0xFFB6B09F),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(
-                                    "${location.points} pts",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                            Text(
-                                "${location.distance} km",
-                                color = Color(0xFFB6B09F),
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
+                        Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "${currentUser.points.toInt()} Points",
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
 
-            // Stats Cards
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                StatCard("Cities Visited", userData.citiesVisited.toString(), modifier = Modifier.weight(1f))
-                StatCard("Countries", userData.countriesVisited.toString(), modifier = Modifier.weight(1f))
+            // Content
+            Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
+                Text("Top 3 Locations", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (topLocations.isEmpty()) {
+                    Text("No locations visited yet by anyone.", color = Color(0xFFB6B09F), modifier = Modifier.padding(vertical = 8.dp))
+                } else {
+                    topLocations.forEachIndexed { index, location ->
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            elevation = CardDefaults.cardElevation(2.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(Color.Black),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("#${index + 1}", color = Color.White)
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(location.city, color = Color.Black, fontWeight = FontWeight.Medium)
+                                        Text("${location.totalVisits} visits", color = Color(0xFFB6B09F), fontSize = 12.sp)
+                                    }
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Surface(
+                                        color = Color(0xFFB6B09F),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text(
+                                            "${location.totalPointsAwarded} pts",
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Stats Cards
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatCard("Cities Visited", currentUser.citiesVisited.toString(), modifier = Modifier.weight(1f))
+                    StatCard("Countries", currentUser.countriesVisited.toString(), modifier = Modifier.weight(1f))
+                }
+
+                // Logout Button
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = { authViewModel.logout() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF2F2F2), contentColor = Color.Red),
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = ButtonDefaults.buttonElevation(2.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Logout, contentDescription = "Logout")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Logout")
+                    }
+                }
             }
         }
     }
@@ -218,7 +254,7 @@ fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = label,
-                color = Color(0xFF6B6658),  // DARKER! Now visible
+                color = Color(0xFF6B6658),
                 fontSize = 14.sp
             )
             Spacer(modifier = Modifier.height(6.dp))
@@ -231,15 +267,3 @@ fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
         }
     }
 }
-
-
-
-data class UserData(
-    val name: String,
-    val email: String,
-    val profileImage: String,
-    val totalPoints: Int,
-    val topLocations: List<Location>,
-    val citiesVisited: Int,
-    val countriesVisited: Int
-)
