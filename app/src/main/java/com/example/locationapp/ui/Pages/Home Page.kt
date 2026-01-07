@@ -41,6 +41,7 @@ fun HomePage(viewModel: HomeViewModel) {
     val claimResult by viewModel.claimResult.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val rank by viewModel.rank.collectAsState()
 
     LaunchedEffect(claimResult) {
         claimResult?.let { message ->
@@ -188,11 +189,8 @@ fun HomePage(viewModel: HomeViewModel) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     QuickStatCard("Cities", user!!.citiesVisited.toString(), modifier = Modifier.weight(1f))
-                    QuickStatCard("Rank", "#-", modifier = Modifier.weight(1f)) // Placeholder
-                    QuickStatCard(
-                        "Friends",
-                        friendsCount.toString(),
-                        modifier = Modifier.weight(1f)
+                    QuickStatCard("Rank", "#$rank", modifier = Modifier.weight(1f)) // Placeholder
+                    QuickStatCard("Friends",friendsCount.toString(), modifier = Modifier.weight(1f)
                     )
                 }
             }

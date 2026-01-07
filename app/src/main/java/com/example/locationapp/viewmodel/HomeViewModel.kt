@@ -50,6 +50,10 @@ class HomeViewModel(
     private val _friendsCount = MutableStateFlow(0)
     val friendsCount: StateFlow<Int> = _friendsCount.asStateFlow()
 
+
+    private val _rank = MutableStateFlow(0)
+    val rank: StateFlow<Int> = _rank.asStateFlow()
+
     init {
         fetchData()
         loadFriendsCount()
@@ -63,6 +67,14 @@ class HomeViewModel(
                 _user.value = dbUser
 
                 val deviceLocation = locationService.getFreshCurrentLocation()
+                authRepository.getCurrentUser().onSuccess { dbUser ->
+                    _user.value = dbUser
+
+                    // 👇 ADD THIS
+                    calculateRank()
+
+                }
+
                 val city = deviceLocation?.let {
                     locationService.getCityFromCoordinates(it.latitude, it.longitude)
                 }
@@ -146,6 +158,25 @@ class HomeViewModel(
             }
         }
     }
+
+    private suspend fun calculateRank() {
+        val currentUser = _user.value ?: return
+
+        val result = friendRepository.getFriends()
+        result.onSuccess { friends ->
+            // Collect points: friends + me
+            val allPoints = friends.map { it.points } + currentUser.points
+
+            // Sort descending (highest points first)
+            val sorted = allPoints.sortedDescending()
+
+            // Rank is index + 1
+            _rank.value = sorted.indexOf(currentUser.points) + 1
+        }.onFailure {
+            _rank.value = 1 // If error, user is rank 1 by default
+        }
+    }
+
 
     private fun calculateDistance(
         lat1: Double,
