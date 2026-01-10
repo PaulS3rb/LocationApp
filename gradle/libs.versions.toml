@@ -1,6 +1,6 @@
 [versions]
 accompanistSwiperefresh = "0.36.0"
-agp = "8.13.0"
+agp = "8.13.2"
 coilCompose = "2.7.0"
 kotlin = "2.0.21"
 coreKtx = "1.10.1"
@@ -59,6 +59,7 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 firebase-bom = { module = "com.google.firebase:firebase-bom", version = "34.6.0" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-storage = { module = "com.google.firebase:firebase-storage" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 

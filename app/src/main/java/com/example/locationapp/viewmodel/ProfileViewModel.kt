@@ -1,5 +1,6 @@
 package com.example.locationapp.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -14,7 +15,7 @@ import kotlinx.coroutines.launch
 
 class ProfileViewModel(
     private val authRepository: AuthRepository,
-    private val locationRepository: LocationRepository // Inject LocationRepository
+    private val locationRepository: LocationRepository
 ) : ViewModel() {
 
     private val _user = MutableStateFlow<User?>(null)
@@ -23,22 +24,34 @@ class ProfileViewModel(
     private val _topLocations = MutableStateFlow<List<Location>>(emptyList())
     val topLocations: StateFlow<List<Location>> = _topLocations.asStateFlow()
 
+    private val _isUploading = MutableStateFlow(false)
+    val isUploading: StateFlow<Boolean> = _isUploading.asStateFlow()
+
     init {
         fetchData()
     }
 
-    // Make fetchData public to be called from the UI
     fun fetchData() {
         viewModelScope.launch {
-            // Fetch user data
             authRepository.getCurrentUser().onSuccess {
                 _user.value = it
             }
 
-            // Fetch global top locations
             locationRepository.getTopLocations(limit = 3).onSuccess { locations ->
                 _topLocations.value = locations
             }
+        }
+    }
+
+    fun updateProfilePicture(uri: Uri) {
+        viewModelScope.launch {
+            _isUploading.value = true
+            authRepository.uploadProfilePicture(uri).onSuccess {
+                fetchData()
+            }.onFailure {
+                // Handle error
+            }
+            _isUploading.value = false
         }
     }
 
@@ -46,7 +59,7 @@ class ProfileViewModel(
 
 class ProfileViewModelFactory(
     private val authRepository: AuthRepository,
-    private val locationRepository: LocationRepository // Add to factory
+    private val locationRepository: LocationRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {

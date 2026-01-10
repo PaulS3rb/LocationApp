@@ -1,6 +1,12 @@
 package com.example.locationapp.ui.Pages
 
+import android.Manifest
+import android.net.Uri
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,10 +53,13 @@ import coil.compose.AsyncImage
 import com.example.locationapp.R
 import com.example.locationapp.viewmodel.AuthViewModel
 import com.example.locationapp.viewmodel.ProfileViewModel
-// --- STEP 2.1: Add the correct Accompanist imports ---
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ProfilePage(
     profileViewModel: ProfileViewModel,
@@ -58,16 +67,33 @@ fun ProfilePage(
 ) {
     val userData by profileViewModel.user.collectAsState()
     val topLocations by profileViewModel.topLocations.collectAsState()
+    val isUploading by profileViewModel.isUploading.collectAsState()
 
-    // --- STEP 2.2: Define the refreshing state ---
     var isRefreshing by remember { mutableStateOf(false) }
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
-    // This LaunchedEffect triggers the refresh and handles the loading state
+    // Determine correct permission based on Android version
+    val permissionString = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        Manifest.permission.READ_MEDIA_IMAGES
+    } else {
+        Manifest.permission.READ_EXTERNAL_STORAGE
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { profileViewModel.updateProfilePicture(it) }
+    }
+
+    val permissionState = rememberPermissionState(permissionString) { isGranted ->
+        if (isGranted) {
+            galleryLauncher.launch("image/*")
+        }
+    }
+
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) {
             profileViewModel.fetchData()
-            // Important: Set refreshing to false once the data is fetched.
             isRefreshing = false
         }
     }
@@ -80,18 +106,16 @@ fun ProfilePage(
         return
     }
 
-    // --- STEP 2.3: Wrap your content in the SwipeRefresh composable ---
     SwipeRefresh(
         state = swipeRefreshState,
-        onRefresh = { isRefreshing = true } // This lambda is called when the user pulls down
+        onRefresh = { isRefreshing = true }
     ) {
-        // The direct child of SwipeRefresh should be the scrollable content.
         Column(
             modifier = Modifier
-                .fillMaxSize() // Fill the space given by SwipeRefresh
+                .fillMaxSize()
                 .background(Color(0xFFEAE4D5))
                 .padding(bottom = 24.dp)
-                .verticalScroll(rememberScrollState()) // Make the content scrollable
+                .verticalScroll(rememberScrollState())
         ) {
             // Header
             Box(
@@ -112,15 +136,38 @@ fun ProfilePage(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    AsyncImage(
-                        model = currentUser.profileImage.ifBlank { R.drawable.profile_fallback },
-                        contentDescription = currentUser.userName,
-                        contentScale = ContentScale.Crop,
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(112.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFB6B09F))
-                    )
+                            .clickable {
+                                if (permissionState.status.isGranted) {
+                                    galleryLauncher.launch("image/*")
+                                } else {
+                                    permissionState.launchPermissionRequest()
+                                }
+                            }
+                    ) {
+                        AsyncImage(
+                            model = currentUser.profileImage.ifBlank { R.drawable.profile_fallback },
+                            contentDescription = currentUser.userName,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        
+                        if (isUploading) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.4f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(32.dp))
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -207,7 +254,6 @@ fun ProfilePage(
                     }
                 }
 
-                // Stats Cards
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -218,7 +264,6 @@ fun ProfilePage(
                     StatCard("Countries", currentUser.countriesVisited.toString(), modifier = Modifier.weight(1f))
                 }
 
-                // Logout Button
                 Spacer(modifier = Modifier.height(32.dp))
                 Button(
                     onClick = { authViewModel.logout() },

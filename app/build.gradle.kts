@@ -86,6 +86,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.storage)
     implementation(libs.firebase.analytics)
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 
@@ -95,4 +96,3 @@ dependencies {
 
 
 }
-
