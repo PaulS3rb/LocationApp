@@ -103,18 +103,5 @@ fun LoginForm(
             }
         }
 
-        SocialDivider()
-
-        // Google Button
-        OutlinedButton(
-            onClick = onGoogleSignIn,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = TextColor
-            ),
-            shape = RoundedCornerShape(6.dp)
-        ) {
-            Text("Google", modifier = Modifier.padding(vertical = 4.dp))
-        }
     }
 }

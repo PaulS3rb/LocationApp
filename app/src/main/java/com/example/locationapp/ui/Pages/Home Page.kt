@@ -30,9 +30,7 @@ fun HomePage(viewModel: HomeViewModel) {
 
     val friendsCount by viewModel.friendsCount.collectAsState()
 
-    // Collect state for the static user profile (points, name, etc.)
     val user by viewModel.user.collectAsState()
-    // Collect state for the DYNAMIC, locally-managed current location
     val currentLocation by viewModel.currentLocation.collectAsState()
 
     val potentialPoints by viewModel.potentialPoints.collectAsState()
@@ -48,8 +46,6 @@ fun HomePage(viewModel: HomeViewModel) {
             snackbarHostState.showSnackbar(message)
         }
     }
-
-    // Show a loading indicator until both user and initial location are ready
     if (user == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -67,7 +63,6 @@ fun HomePage(viewModel: HomeViewModel) {
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            /* ---------------- HEADER ---------------- */
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -95,14 +90,12 @@ fun HomePage(viewModel: HomeViewModel) {
                 }
             }
 
-            /* ---------------- MAIN CONTENT ---------------- */
             Column(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
                     .padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                /* -------- ACTION CARD: CURRENT LOCATION -------- */
                 Card(
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(6.dp),
@@ -110,7 +103,6 @@ fun HomePage(viewModel: HomeViewModel) {
                 ) {
                     Column {
                         Box(modifier = Modifier.height(180.dp)) {
-                            // Use the local currentLocation state for the image
                             AsyncImage(
                                 model = currentLocation.cityImage,
                                 contentDescription = currentLocation.cityName,
@@ -132,7 +124,6 @@ fun HomePage(viewModel: HomeViewModel) {
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text("Current Location", color = Color.White.copy(alpha = 0.9f), fontSize = 14.sp)
                                 }
-                                // Use the local currentLocation state for the city name
                                 Text(
                                     if (currentLocation.cityName.isNotBlank()) currentLocation.cityName else "Locating...",
                                     color = Color.White,
@@ -145,7 +136,6 @@ fun HomePage(viewModel: HomeViewModel) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             if (isClaimable) {
                                 Text("New City Detected!", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                // Use the local currentLocation state for the descriptive text
                                 Text("Claim your points for traveling to ${currentLocation.cityName}.", color = Color(0xFF6B6658), fontSize = 14.sp)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Button(
@@ -167,7 +157,6 @@ fun HomePage(viewModel: HomeViewModel) {
                                     }
                                 }
                             } else if (currentLocation.cityName.isNotBlank()) {
-                                // Use the local currentLocation state here as well
                                 Text("Welcome back to ${currentLocation.cityName}", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                                 Text("You have already claimed points for this city.", color = Color(0xFF6B6658), fontSize = 14.sp)
                             } else {
@@ -183,7 +172,6 @@ fun HomePage(viewModel: HomeViewModel) {
                     }
                 }
 
-                /* -------- QUICK STATS -------- */
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()

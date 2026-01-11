@@ -63,11 +63,10 @@ class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
-                // Permission is granted. Re-fetch data that needs location.
                 homeViewModel.fetchData()
                 profileViewModel.fetchData()
             } else {
-                // Explain to the user that the feature is unavailable.
+                // Permission is denied.
             }
         }
 
@@ -77,13 +76,10 @@ class MainActivity : ComponentActivity() {
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED -> {
-                // Permission is already granted.
             }
             shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
-                // Optionally show a dialog explaining why you need the permission.
             }
             else -> {
-                // Directly ask for the permission.
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
@@ -99,7 +95,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    // Inside MainActivity class
     private val friendsViewModel: FriendsViewModel by viewModels {
         FriendsViewModelFactory(FriendRepository())
     }
@@ -110,7 +105,6 @@ class MainActivity : ComponentActivity() {
             LocationService(applicationContext),
             FriendRepository()
         )}
-    // ViewModel for the new "Set Home" screen
     private val setHomeViewModel: SetHomeViewModel by viewModels {
         SetHomeViewModelFactory(
             AuthRepository(applicationContext),
@@ -124,11 +118,8 @@ class MainActivity : ComponentActivity() {
         askForLocationPermission()
         setContent {
             val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
-            // This user state is the source of truth for deciding which screen to show post-login
             val user by profileViewModel.user.collectAsState()
 
-            // This LaunchedEffect triggers when the user's auth state changes.
-            // If they just logged in, we fetch their profile data.
             LaunchedEffect(isAuthenticated) {
                 if (isAuthenticated) {
                     profileViewModel.fetchData()
@@ -137,33 +128,23 @@ class MainActivity : ComponentActivity() {
 
             Surface(modifier = Modifier.fillMaxSize(), color = BackgroundColor) {
                 if (isAuthenticated) {
-                    // Check if the user object has been loaded first
                     if (user != null) {
-                        // Once we have the user object, check if home has been set
                         if (user!!.hasSetHome) {
-                            // If home IS set, show the main app.
                             LocationAppApp(profileViewModel, homeViewModel, authViewModel, friendsViewModel)
                         } else {
-                            // If home is NOT set, show the setup page.
                             SetHomePage(
                                 viewModel = setHomeViewModel,
                                 onHomeSet = {
-                                    // This callback is crucial. When the user confirms their home,
-                                    // we re-fetch the profile data. This updates the `user` state
-                                    // which causes this whole block to re-evaluate, now showing the main app.
                                     profileViewModel.fetchData()
                                 }
                             )
                         }
                     } else {
-                        // If user is still null (i.e., being fetched), show a loading screen.
-                        // This prevents a flicker where the SetHomePage might appear for a split second.
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                             CircularProgressIndicator()
                         }
                     }
                 } else {
-                    // If not authenticated, show the login/signup screen.
                     AuthScreen(viewModel = authViewModel, onLoginSuccess = {}, onSignupSuccess = {})
                 }
             }
@@ -191,7 +172,6 @@ fun LocationAppApp(
                     selected = destination == currentDestination,
                     onClick = {
                         currentDestination = destination
-                        // When a tab is clicked, refresh its data to keep it current
                         when (destination) {
                             AppDestinations.HOME -> homeViewModel.fetchData()
                             AppDestinations.PROFILE -> profileViewModel.fetchData()
@@ -235,7 +215,6 @@ fun LocationAppNavigation() {
         navController = navController,
         startDestination = "auth"
     ) {
-        // You can define your navigation graph here later
     }
 
 }

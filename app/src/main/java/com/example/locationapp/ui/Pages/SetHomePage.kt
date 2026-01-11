@@ -28,14 +28,12 @@ fun SetHomePage(
     viewModel: SetHomeViewModel,
     onHomeSet: () -> Unit
 ) {
-    // This state holds the locally detected location info
     val detectedLocationState by viewModel.detectedLocation.collectAsState()
 
     val searchText by viewModel.searchText.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
 
-    // Use the new state. It's already in the CitySearchResult format.
     val detectedLocation = detectedLocationState.takeIf { it.formattedAddress.isNotBlank() }
 
     Column(
@@ -61,7 +59,6 @@ fun SetHomePage(
         )
         Spacer(Modifier.height(24.dp))
 
-        // Search Bar
         OutlinedTextField(
             value = searchText,
             onValueChange = { viewModel.onSearchTextChanged(it) },
@@ -83,7 +80,6 @@ fun SetHomePage(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Show detected location as the first, special option if available and no search is active
                 if (detectedLocation != null && searchText.isEmpty()) {
                     item {
                         Text("Detected Location:", fontWeight = FontWeight.Bold, fontSize = 14.sp)
@@ -94,7 +90,6 @@ fun SetHomePage(
                     }
                 }
 
-                // Show search results
                 if (searchResults.isNotEmpty()) {
                     item {
                         Text("Search Results:", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
@@ -125,7 +120,6 @@ private fun CityRow(city: CitySearchResult, onClick: (CitySearchResult) -> Unit)
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Display the formatted address from the CitySearchResult
             Text(city.formattedAddress, fontSize = 16.sp)
         }
     }

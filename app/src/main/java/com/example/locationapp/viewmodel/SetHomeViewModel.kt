@@ -23,12 +23,7 @@ class SetHomeViewModel(
     private val locationService: LocationService
 ) : ViewModel() {
 
-    // REMOVED: The _user state is no longer needed here.
-    // private val _user = MutableStateFlow<User?>(null)
-    // val user = _user.asStateFlow()
-
-    // --- NEW: State for the locally detected location ---
-    private val _detectedLocation = MutableStateFlow(CitySearchResult("", 0.0, 0.0))
+private val _detectedLocation = MutableStateFlow(CitySearchResult("", 0.0, 0.0))
     val detectedLocation = _detectedLocation.asStateFlow()
 
     private val _searchText = MutableStateFlow("")
@@ -43,13 +38,11 @@ class SetHomeViewModel(
     private var searchJob: Job? = null
 
     init {
-        // Fetch the device's current location directly, instead of the whole user object.
-        viewModelScope.launch {
+       viewModelScope.launch {
             val deviceLocation = locationService.getFreshCurrentLocation()
             if (deviceLocation != null) {
                 val city = locationService.getCityFromCoordinates(deviceLocation.latitude, deviceLocation.longitude)
                 if (city != null) {
-                    // Update our local detectedLocation state
                     _detectedLocation.value = CitySearchResult(
                         formattedAddress = city,
                         latitude = deviceLocation.latitude,
@@ -62,14 +55,14 @@ class SetHomeViewModel(
 
     fun onSearchTextChanged(text: String) {
         _searchText.value = text
-        searchJob?.cancel() // Cancel previous job
+        searchJob?.cancel()
         if (text.length < 3) {
             _searchResults.value = emptyList()
             return
         }
 
         searchJob = viewModelScope.launch {
-            delay(300) // Debounce: wait for user to stop typing
+            delay(300)
             _isSearching.value = true
             val results = locationService.getCoordinatesFromCityName(text)
             _searchResults.value = results
@@ -93,7 +86,7 @@ class SetHomeViewModel(
     fun setHomeLocation(city: CitySearchResult, onHomeSet: () -> Unit) {
         viewModelScope.launch {
             authRepository.setHomeLocation(city.latitude, city.longitude).onSuccess {
-                onHomeSet() // Callback to navigate
+                onHomeSet()
             }
         }
     }

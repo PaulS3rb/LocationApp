@@ -45,7 +45,6 @@ fun FriendsPage(viewModel: FriendsViewModel) {
         }
     }
 
-    // Deletion Confirmation Dialog
     if (friendToRemove != null) {
         AlertDialog(
             onDismissRequest = { friendToRemove = null },
@@ -62,7 +61,6 @@ fun FriendsPage(viewModel: FriendsViewModel) {
     }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFEAE4D5)).padding(16.dp)) {
-        // Header
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("Friends", fontSize = 28.sp, fontWeight = FontWeight.Bold)
             TextButton(onClick = { sortByPoints = !sortByPoints }) {
@@ -72,7 +70,6 @@ fun FriendsPage(viewModel: FriendsViewModel) {
             }
         }
 
-        // Search Bar
         OutlinedTextField(
             value = searchQuery,
             onValueChange = {
@@ -95,19 +92,17 @@ fun FriendsPage(viewModel: FriendsViewModel) {
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
 
-            // 1. Search Results - Only shows if there is text in search bar
             if (searchQuery.isNotEmpty() && searchResults.isNotEmpty()) {
                 item { Text("Search Results", fontWeight = FontWeight.Bold, color = Color(0xFF6B6658)) }
                 items(searchResults) { user ->
                     SearchResultItem(user) {
                         viewModel.sendRequest(user)
-                        searchQuery = "" // This clears the bar and hides the list
+                        searchQuery = ""
                     }
                 }
                 item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
             }
 
-            // 2. Incoming Requests
             if (incomingRequests.isNotEmpty()) {
                 item { Text("Incoming Requests", fontWeight = FontWeight.Bold, color = Color(0xFF6B6658)) }
                 items(incomingRequests) { req ->
@@ -115,7 +110,6 @@ fun FriendsPage(viewModel: FriendsViewModel) {
                 }
             }
 
-            // 3. Sent (Outgoing) Requests
             if (outgoingRequests.isNotEmpty()) {
                 item { Text("Sent Requests", fontWeight = FontWeight.Bold, color = Color(0xFF6B6658)) }
                 items(outgoingRequests) { req ->
@@ -123,13 +117,11 @@ fun FriendsPage(viewModel: FriendsViewModel) {
                 }
             }
 
-            // 4. Actual Friends List
             item { Text("Your Friends", fontWeight = FontWeight.Bold, color = Color(0xFF6B6658)) }
             if (sortedFriends.isEmpty()) {
                 item { Box(Modifier.fillMaxWidth().padding(top = 40.dp), Alignment.Center) { Text("No friends added yet.", color = Color(0xFFB6B09F)) } }
             } else {
                 items(sortedFriends) { friend ->
-                    // FIXED: Passing onRemove parameter
                     FriendItem(friend, onRemove = { friendToRemove = friend })
                 }
             }

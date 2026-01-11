@@ -35,7 +35,6 @@ fun SignupForm(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Name Field
         AuthTextField(
             value = name,
             onValueChange = onNameChange,
@@ -44,7 +43,6 @@ fun SignupForm(
             leadingIcon = Icons.Default.Person
         )
 
-        // Email Field
         AuthTextField(
             value = email,
             onValueChange = onEmailChange,
@@ -54,7 +52,6 @@ fun SignupForm(
             keyboardType = KeyboardType.Email
         )
 
-        // Password Field
         AuthTextField(
             value = password,
             onValueChange = onPasswordChange,
@@ -64,7 +61,6 @@ fun SignupForm(
             isPassword = true
         )
 
-        // Confirm Password Field
         AuthTextField(
             value = confirmPassword,
             onValueChange = onConfirmPasswordChange,
@@ -76,7 +72,6 @@ fun SignupForm(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Signup Button
         Button(
             onClick = onSignup,
             modifier = Modifier.fillMaxWidth(),
@@ -89,7 +84,6 @@ fun SignupForm(
             Text("Sign Up", modifier = Modifier.padding(vertical = 4.dp))
         }
 
-        // Switch to Login
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
@@ -111,18 +105,5 @@ fun SignupForm(
             }
         }
 
-        SocialDivider()
-
-        // Google Button
-        OutlinedButton(
-            onClick = onGoogleSignIn,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = TextColor
-            ),
-            shape = RoundedCornerShape(6.dp)
-        ) {
-            Text("Google", modifier = Modifier.padding(vertical = 4.dp))
-        }
     }
 }

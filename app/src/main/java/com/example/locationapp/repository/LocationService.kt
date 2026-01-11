@@ -19,9 +19,9 @@ import kotlin.coroutines.resume
 
 class LocationService(private val context: Context) {
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    private val geocoder = Geocoder(context, Locale.getDefault()) // This will now resolve correctly
+    private val geocoder = Geocoder(context, Locale.getDefault())
 
-    @SuppressLint("MissingPermission") // We will handle permissions before calling this
+    @SuppressLint("MissingPermission")
     suspend fun getFreshCurrentLocation(): AndroidLocation? {
         val cancellationTokenSource = CancellationTokenSource()
         return fusedLocationClient.getCurrentLocation(
@@ -31,12 +31,9 @@ class LocationService(private val context: Context) {
     }
 
     suspend fun getCityFromCoordinates(latitude: Double, longitude: Double): String? {
-        // Geocoding can be slow, so it should be on a background thread
         return withContext(Dispatchers.IO) {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    // --- REVISED LOGIC FOR NEWER ANDROID ---
-                    // Use a coroutine to wait for the asynchronous callback
                     suspendCancellableCoroutine { continuation ->
                         geocoder.getFromLocation(latitude, longitude, 1) { addresses ->
                             val city = addresses.firstOrNull()?.locality
@@ -46,15 +43,13 @@ class LocationService(private val context: Context) {
                         }
                     }
                 } else {
-                    // For older Android versions (deprecated but necessary)
                     @Suppress("DEPRECATION")
                     val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                    addresses?.firstOrNull()?.locality // This returns correctly from the withContext block
+                    addresses?.firstOrNull()?.locality
                 }
             } catch (e: Exception) {
-                // Handle exceptions like no network connection
                 e.printStackTrace()
-                null // Return null on error
+                null
             }
         }
     }
@@ -82,12 +77,11 @@ class LocationService(private val context: Context) {
     }
 
     fun getFormattedAddress(address: Address): String {
-        // We use a set to avoid duplicates (e.g., if city and admin area are the same)
         val parts = linkedSetOf<String>()
 
-        address.locality?.let { parts.add(it) } // City
-        address.adminArea?.let { parts.add(it) } // State or Region
-        address.countryName?.let { parts.add(it) } // Country
+        address.locality?.let { parts.add(it) }
+        address.adminArea?.let { parts.add(it) }
+        address.countryName?.let { parts.add(it) }
 
         return parts.joinToString(", ")
     }

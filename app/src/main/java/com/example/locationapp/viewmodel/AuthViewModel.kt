@@ -35,12 +35,11 @@ class AuthViewModel(private val repo: AuthRepository) : ViewModel() {
 
             _authState.value = AuthState.Loading
 
-            // This call will now succeed because the function exists in the repository
             val result = repo.signup(userName, email, password)
 
             result.onSuccess {
-                _authState.value = AuthState.Success("Successfully authenticated") // Changed
-                _isAuthenticated.value = true // Update our new flow
+                _authState.value = AuthState.Success("Successfully authenticated")
+                _isAuthenticated.value = true
             }.onFailure {
                 _authState.value = AuthState.Error(it.message ?: "Unknown error")
             }
@@ -50,21 +49,18 @@ class AuthViewModel(private val repo: AuthRepository) : ViewModel() {
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-
-            // This call will also succeed now
             val result = repo.login(email, password)
 
             result.onSuccess {
-                _authState.value = AuthState.Success("Successfully authenticated") // Changed
-                _isAuthenticated.value = true // Update our new flow
+                _authState.value = AuthState.Success("Successfully authenticated")
+                _isAuthenticated.value = true
             }.onFailure {
                 _authState.value = AuthState.Error(it.message ?: "Invalid email or password.")
             }
         }
     }
 
-    // --- NEW LOGOUT FUNCTION ---
-    fun logout() {
+  fun logout() {
         repo.logout()
         _isAuthenticated.value = false
     }
