@@ -215,7 +215,6 @@ fun ProfilePage(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatCard("Cities Visited", currentUser.citiesVisited.toString(), modifier = Modifier.weight(1f))
-                    StatCard("Countries", currentUser.countriesVisited.toString(), modifier = Modifier.weight(1f))
                 }
 
                 // Logout Button
