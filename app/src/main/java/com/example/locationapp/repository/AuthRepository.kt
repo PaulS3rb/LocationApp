@@ -20,28 +20,23 @@ class AuthRepository(context: Context) {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
     private val users = db.collection("users")
-    private val locations = db.collection("locations") // Reference to the new collection
+    private val locations = db.collection("locations")
     private val locationService = LocationService(context)
 
-    // --- ADDING THESE FUNCTIONS BACK ---
 
     suspend fun signup(userName: String, email: String, password: String): Result<Unit> {
         return try {
-            // 1. Create user in Firebase Auth
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: throw Exception("Failed to get user after creation.")
 
-            // 2. Update Firebase Auth profile with username
             val profileUpdates = userProfileChangeRequest {
                 displayName = userName
             }
             firebaseUser.updateProfile(profileUpdates).await()
 
-            // 3. Create user document in Firestore
             val user = User(
                 userName = userName,
                 email = email,
-                // Other fields will have default values
             )
             users.document(firebaseUser.uid).set(user).await()
 
@@ -65,8 +60,6 @@ class AuthRepository(context: Context) {
     }
 
 
-    // --- EXISTING FUNCTIONS ---
-
     suspend fun getCurrentUser(): Result<User> {
         return try {
             val uid = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
@@ -85,7 +78,7 @@ class AuthRepository(context: Context) {
         return when (city.lowercase()) {
             "tokyo" -> "https://images.unsplash.com/photo-1542051841857-5f90071e7989"
             "cluj-napoca" -> "https://images.unsplash.com/photo-1570168007204-dfb528c6958f"
-            else -> "https://images.unsplash.com/photo-1554878516-1691fd114521" // Default fallback
+            else -> "https://images.unsplash.com/photo-1554878516-1691fd114521"
         }
     }
 
@@ -98,25 +91,17 @@ class AuthRepository(context: Context) {
             val uid = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
             val userRef = users.document(uid)
 
-            // Run as a transaction to ensure all writes succeed or fail together
             db.runTransaction { transaction ->
-                // --- ALL READS MUST BE FIRST ---
-                // 1. Read the user's document
                 val userSnapshot = transaction.get(userRef)
                 val user = userSnapshot.toObject(User::class.java)!!
-
-                // 2. Read the location document
                 val cityId = currentCity.replace(" ", "_").lowercase()
                 val locationRef = locations.document(cityId)
                 val locationSnapshot = transaction.get(locationRef)
 
-                // --- PERFORM LOGIC AND CHECKS ---
-                // 3. Safety Check: Ensure the location is valid and not already visited
                 if (currentCity.isBlank() || user.visitedCities.contains(currentCity)) {
                     throw Exception("City is not claimable.")
                 }
 
-                // 4. Calculate Points
                 val distance = calculateDistance(
                     user.homeLatitude,
                     user.homeLongitude,
@@ -137,8 +122,7 @@ class AuthRepository(context: Context) {
                     "citiesVisited" to FieldValue.increment(1)
                 ))
 
-                // 6. Write to the Global Location Document
-                val cityImage = getCityImage(currentCity) // Get image here
+                val cityImage = getCityImage(currentCity)
                 if (locationSnapshot.exists()) {
                     transaction.update(locationRef, mapOf(
                         "totalVisits" to FieldValue.increment(1),
@@ -157,7 +141,7 @@ class AuthRepository(context: Context) {
                     transaction.set(locationRef, newLocation)
                 }
 
-                null // Return value for a successful transaction
+                null
             }.await()
 
             Result.success(Unit)
@@ -186,7 +170,6 @@ class AuthRepository(context: Context) {
                 return Result.failure(Exception("Invalid home location coordinates."))
             }
 
-            // Prepare the updates
             val homeUpdates = mapOf(
                 "homeLatitude" to latitude,
                 "homeLongitude" to longitude,

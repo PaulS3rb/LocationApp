@@ -73,9 +73,7 @@ class FriendsViewModel(private val repository: FriendRepository) : ViewModel() {
         repository.cancelRequest(targetId).onSuccess { fetchFriendsAndRequests() }
     }
 
-    // Modify the existing sendRequest to also save to 'sentRequests' for tracking
     fun sendRequest(user: User) = viewModelScope.launch {
-        // repository.sendFriendRequest logic should be updated to save to both locations
         repository.sendFriendRequest(user).onSuccess { fetchFriendsAndRequests() }
     }
     fun acceptRequest(req: FriendRequest) = viewModelScope.launch {

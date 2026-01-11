@@ -59,15 +59,12 @@ fun ProfilePage(
     val userData by profileViewModel.user.collectAsState()
     val topLocations by profileViewModel.topLocations.collectAsState()
 
-    // --- STEP 2.2: Define the refreshing state ---
     var isRefreshing by remember { mutableStateOf(false) }
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
-    // This LaunchedEffect triggers the refresh and handles the loading state
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) {
             profileViewModel.fetchData()
-            // Important: Set refreshing to false once the data is fetched.
             isRefreshing = false
         }
     }
@@ -80,20 +77,17 @@ fun ProfilePage(
         return
     }
 
-    // --- STEP 2.3: Wrap your content in the SwipeRefresh composable ---
     SwipeRefresh(
         state = swipeRefreshState,
-        onRefresh = { isRefreshing = true } // This lambda is called when the user pulls down
+        onRefresh = { isRefreshing = true }
     ) {
-        // The direct child of SwipeRefresh should be the scrollable content.
         Column(
             modifier = Modifier
-                .fillMaxSize() // Fill the space given by SwipeRefresh
+                .fillMaxSize()
                 .background(Color(0xFFEAE4D5))
                 .padding(bottom = 24.dp)
-                .verticalScroll(rememberScrollState()) // Make the content scrollable
+                .verticalScroll(rememberScrollState())
         ) {
-            // Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,7 +146,6 @@ fun ProfilePage(
                 }
             }
 
-            // Content
             Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
                 Text("Top 3 Locations", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(12.dp))
@@ -207,7 +200,6 @@ fun ProfilePage(
                     }
                 }
 
-                // Stats Cards
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -217,7 +209,6 @@ fun ProfilePage(
                     StatCard("Cities Visited", currentUser.citiesVisited.toString(), modifier = Modifier.weight(1f))
                 }
 
-                // Logout Button
                 Spacer(modifier = Modifier.height(32.dp))
                 Button(
                     onClick = { authViewModel.logout() },

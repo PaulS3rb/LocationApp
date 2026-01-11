@@ -46,7 +46,6 @@ class HomeViewModel(
     private val _claimResult = MutableStateFlow<String?>(null)
     val claimResult: StateFlow<String?> = _claimResult.asStateFlow()
 
-    // ✅ FIX: friends count state
     private val _friendsCount = MutableStateFlow(0)
     val friendsCount: StateFlow<Int> = _friendsCount.asStateFlow()
 
@@ -70,7 +69,6 @@ class HomeViewModel(
                 authRepository.getCurrentUser().onSuccess { dbUser ->
                     _user.value = dbUser
 
-                    // 👇 ADD THIS
                     calculateRank()
 
                 }
@@ -164,16 +162,12 @@ class HomeViewModel(
 
         val result = friendRepository.getFriends()
         result.onSuccess { friends ->
-            // Collect points: friends + me
             val allPoints = friends.map { it.points } + currentUser.points
-
-            // Sort descending (highest points first)
             val sorted = allPoints.sortedDescending()
 
-            // Rank is index + 1
             _rank.value = sorted.indexOf(currentUser.points) + 1
         }.onFailure {
-            _rank.value = 1 // If error, user is rank 1 by default
+            _rank.value = 1
         }
     }
 

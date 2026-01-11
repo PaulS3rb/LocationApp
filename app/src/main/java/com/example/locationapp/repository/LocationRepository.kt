@@ -9,13 +9,6 @@ class LocationRepository {
 
     private val locationsCollection = FirebaseFirestore.getInstance().collection("locations")
 
-    /**
-     * Fetches the top locations from the global 'locations' collection,
-     * sorted by the total points awarded in descending order.
-     *
-     * @param limit The maximum number of top locations to retrieve.
-     * @return A Result containing the list of top Location objects or an exception.
-     */
     suspend fun getTopLocations(limit: Int = 10): Result<List<Location>> {
         return try {
             val snapshot = locationsCollection
