@@ -27,6 +27,9 @@ import com.example.locationapp.viewmodel.HomeViewModel
 
 @Composable
 fun HomePage(viewModel: HomeViewModel) {
+
+    val friendsCount by viewModel.friendsCount.collectAsState()
+
     // Collect state for the static user profile (points, name, etc.)
     val user by viewModel.user.collectAsState()
     // Collect state for the DYNAMIC, locally-managed current location
@@ -38,6 +41,7 @@ fun HomePage(viewModel: HomeViewModel) {
     val claimResult by viewModel.claimResult.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val rank by viewModel.rank.collectAsState()
 
     LaunchedEffect(claimResult) {
         claimResult?.let { message ->
@@ -185,8 +189,9 @@ fun HomePage(viewModel: HomeViewModel) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     QuickStatCard("Cities", user!!.citiesVisited.toString(), modifier = Modifier.weight(1f))
-                    QuickStatCard("Rank", "#-", modifier = Modifier.weight(1f)) // Placeholder
-                    QuickStatCard("Friends", "0", modifier = Modifier.weight(1f)) // Placeholder
+                    QuickStatCard("Rank", "#$rank", modifier = Modifier.weight(1f)) // Placeholder
+                    QuickStatCard("Friends",friendsCount.toString(), modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }

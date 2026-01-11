@@ -107,7 +107,8 @@ class MainActivity : ComponentActivity() {
         HomeViewModelFactory(
             AuthRepository(applicationContext),
             LocationRepository(),
-            LocationService(applicationContext)
+            LocationService(applicationContext),
+            FriendRepository()
         )}
     // ViewModel for the new "Set Home" screen
     private val setHomeViewModel: SetHomeViewModel by viewModels {
